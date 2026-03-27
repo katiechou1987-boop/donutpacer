@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pace Calculator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #000;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .app {
+      background: linear-gradient(175deg, #C85000 0%, #7a1a00 12%, #2a0800 28%, #0d0200 50%, #000000 100%);
+      border-radius: 20px;
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 420px;
+    }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .app-title { font-size: 17px; font-weight: 700; color: #fff; }
+    .app-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+    .lang-toggle { display: flex; gap: 4px; }
+    .lang-btn { font-size: 12px; padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); background: transparent; color: rgba(255,255,255,0.45); cursor: pointer; transition: all 0.15s; }
+    .lang-btn.active { background: rgba(255,255,255,0.13); color: #fff; border-color: rgba(255,255,255,0.35); }
+    .section-card { border-radius: 18px; padding: 1.25rem; margin-bottom: 14px; transition: background 0.3s; }
+    .section-card.active { background: linear-gradient(180deg, #F07000 0%, #D44000 45%, #B02000 100%); }
+    .section-card.inactive { background: #1a1a1a; cursor: pointer; }
+    .section-card.inactive:hover { background: #222; }
+    .section-title-active { font-size: 15px; font-weight: 700; color: #fff; display: block; margin-bottom: 1rem; }
+    .section-title-inactive { font-size: 15px; font-weight: 700; color: #555; display: block; margin-bottom: 1rem; }
+    .sub-label-active { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px; }
+    .sub-label-inactive { font-size: 11px; font-weight: 600; color: #3a3a3a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px; }
+    .input-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 1rem; }
+    .input-group { flex: 1; }
+    .input-group label { display: block; font-size: 12px; margin-bottom: 5px; }
+    .label-active { color: rgba(255,255,255,0.6); }
+    .label-inactive { color: #3a3a3a; }
+    .input-active { width: 100%; font-size: 24px; font-weight: 700; color: #fff; background: rgba(0,0,0,0.22); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px 12px; text-align: center; outline: none; transition: border-color 0.15s; }
+    .input-active:focus { border-color: rgba(255,255,255,0.55); }
+    .input-inactive { width: 100%; font-size: 24px; font-weight: 700; color: #555; background: #111; border: 1.5px solid #252525; border-radius: 12px; padding: 10px 12px; text-align: center; outline: none; transition: border-color 0.15s; }
+    .input-inactive:focus { border-color: #E85002; }
+    .colon-active { font-size: 24px; font-weight: 700; color: rgba(255,255,255,0.35); padding-bottom: 10px; }
+    .colon-inactive { font-size: 24px; font-weight: 700; color: #2a2a2a; padding-bottom: 10px; }
+    .results { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+    .card-active { background: rgba(0,0,0,0.22); border-radius: 12px; padding: 12px 14px; }
+    .card-inactive { background: #111; border-radius: 12px; padding: 12px 14px; }
+    .card-label-active { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 5px; }
+    .card-label-inactive { font-size: 11px; color: #3a3a3a; margin-bottom: 5px; }
+    .card-value-active { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.1; }
+    .card-value-inactive { font-size: 20px; font-weight: 700; color: #D04000; line-height: 1.1; }
+    .card-sub-active { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+    .card-sub-inactive { font-size: 11px; color: #2a2a2a; margin-top: 3px; }
+    .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0.9rem; }
+    .toggle-label-active { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .toggle-label-inactive { font-size: 12px; color: #3a3a3a; }
+    .toggle-btn-active { font-size: 12px; padding: 5px 14px; border-radius: 999px; border: none; background: rgba(0,0,0,0.22); color: rgba(255,255,255,0.45); cursor: pointer; transition: all 0.15s; }
+    .toggle-btn-active.on { background: #000; color: #fff; }
+    .toggle-btn-inactive { font-size: 12px; padding: 5px 14px; border-radius: 999px; border: 1px solid #252525; background: transparent; color: #3a3a3a; cursor: pointer; }
+    .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.35rem; }
+    .dist-row input { width: 110px; }
+    .dist-unit-active { font-size: 14px; color: rgba(255,255,255,0.5); }
+    .dist-unit-inactive { font-size: 14px; color: #3a3a3a; }
+    .hint-active { font-size: 11px; color: rgba(255,255,255,0.28); margin-bottom: 0.9rem; }
+    .hint-inactive { font-size: 11px; color: #2a2a2a; margin-bottom: 0.9rem; }
+    .inline-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+    .inline-row input { width: 130px; }
+    .footer { text-align: center; font-size: 11px; color: rgba(255,255,255,0.12); margin-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="top-bar">
+    <div>
+      <div class="app-title" id="txt-title">跑步配速換算</div>
+      <div class="app-sub" id="txt-sub">即時換算 · 無需網路</div>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="lang-zh" onclick="setLang('zh')">中文</button>
+      <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+
+  <div id="card-km" class="section-card active">
+    <span class="section-title-active" id="txt-section1">配速換算</span>
+    <p class="sub-label-active" id="txt-pace-label">每公里配速</p>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="label-active" id="txt-min-label">分鐘</label>
+        <input class="input-active" type="number" id="km-min" min="0" max="59" value="5">
+      </div>
+      <div class="colon-active" id="colon-km">:</div>
+      <div class="input-group">
+        <label class="label-active" id="txt-sec-label">秒</label>
+        <input class="input-active" type="number" id="km-sec" min="0" max="59" value="45">
+      </div>
+    </div>
+    <p class="sub-label-active" id="txt-per100-label">每 100 公尺</p>
+    <div class="results">
+      <div class="card-active" id="c-r100s">
+        <div class="card-label-active" id="txt-sec-l1">所需秒數</div>
+        <div class="card-value-active" id="r100s">—</div>
+        <div class="card-sub-active" id="txt-sec-u1">秒</div>
+      </div>
+      <div class="card-active" id="c-r100m">
+        <div class="card-label-active" id="txt-ms-l1">換算分秒</div>
+        <div class="card-value-active" id="r100m">—</div>
+        <div class="card-sub-active" id="txt-ms-u1">分 : 秒</div>
+      </div>
+    </div>
+    <p class="sub-label-active" id="txt-per400-label">每 400 公尺（一圈）</p>
+    <div class="results">
+      <div class="card-active" id="c-r400s">
+        <div class="card-label-active" id="txt-sec-l2">所需秒數</div>
+        <div class="card-value-active" id="r400s">—</div>
+        <div class="card-sub-active" id="txt-sec-u2">秒</div>
+      </div>
+      <div class="card-active" id="c-r400m">
+        <div class="card-label-active" id="txt-ms-l2">換算分秒</div>
+        <div class="card-value-active" id="r400m">—</div>
+        <div class="card-sub-active" id="txt-ms-u2">分 : 秒</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="card-target" class="section-card inactive" onclick="switchActive('target')">
+    <span class="section-title-inactive" id="txt-section2">目標配速反推</span>
+    <p class="sub-label-inactive" id="txt-dist-label">目標距離</p>
+    <div class="dist-row">
+      <input class="input-inactive" type="number" id="target-dist" min="1" value="400">
+      <span class="dist-unit-inactive" id="txt-meter">公尺</span>
+    </div>
+    <p class="hint-inactive" id="txt-hint">預設 400 公尺，可自行修改</p>
+    <div class="toggle-row">
+      <span class="toggle-label-inactive" id="txt-unit-label">輸入單位：</span>
+      <button class="toggle-btn-inactive" id="btn-sec" onclick="event.stopPropagation();setMode('sec')"><span id="txt-btn-sec">秒數</span></button>
+      <button class="toggle-btn-inactive" id="btn-min" onclick="event.stopPropagation();setMode('min')"><span id="txt-btn-min">分鐘數</span></button>
+    </div>
+    <div id="input-sec-area">
+      <p class="sub-label-inactive" id="label-sec-input">400 公尺目標秒數</p>
+      <div class="inline-row">
+        <input class="input-inactive" type="number" id="t-sec" min="1" value="138">
+        <span class="dist-unit-inactive" id="txt-sec-sfx">秒</span>
+      </div>
+    </div>
+    <div id="input-min-area" style="display:none;">
+      <p class="sub-label-inactive" id="label-min-input">400 公尺目標分鐘數</p>
+      <div class="inline-row">
+        <input class="input-inactive" type="number" id="t-min-val" min="0" step="0.001">
+        <span class="dist-unit-inactive" id="txt-min-sfx">分鐘</span>
+      </div>
+    </div>
+    <p class="sub-label-inactive" id="txt-result-label">每 100 公尺結果</p>
+    <div class="results">
+      <div class="card-inactive" id="c-t100v">
+        <div class="card-label-inactive" id="t-label-1">所需秒數</div>
+        <div class="card-value-inactive" id="t100-val">—</div>
+        <div class="card-sub-inactive" id="t-unit-1">秒</div>
+      </div>
+      <div class="card-inactive" id="c-t100a">
+        <div class="card-label-inactive" id="txt-ms-l3">換算分秒</div>
+        <div class="card-value-inactive" id="t100-alt">—</div>
+        <div class="card-sub-inactive" id="txt-ms-u3">分 : 秒</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer" id="txt-footer">Pace Calculator · Real-time · Offline</div>
+</div>
+
+<script>
+  var mode='sec', lang='zh', activeSection='km';
+  var i18n={
+    zh:{
+      title:'跑步配速換算',sub:'即時換算 · 無需網路',
+      section1:'配速換算',section2:'目標配速反推',
+      paceLabel:'每公里配速',minLabel:'分鐘',secLabel:'秒',
+      per100:'每 100 公尺',per400:'每 400 公尺（一圈）',
+      secL:'所需秒數',secU:'秒',msL:'換算分秒',msU:'分 : 秒',
+      distLabel:'目標距離',meter:'公尺',hint:'預設 400 公尺，可自行修改',
+      unitLabel:'輸入單位：',btnSec:'秒數',btnMin:'分鐘數',
+      secSfx:'秒',minSfx:'分鐘',resultLabel:'每 100 公尺結果',
+      mSecL:'所需秒數',mSecU:'秒',mMinL:'所需分鐘數',mMinU:'分鐘',
+      footer:'Pace Calculator · 即時換算 · 無需網路',
+      tSL:function(d){return d+' 公尺目標秒數';},
+      tML:function(d){return d+' 公尺目標分鐘數';},
+      toMS:function(s){var m=Math.floor(s/60);var ss=(s%60).toFixed(1);return m+'分 '+ss+'秒';}
+    },
+    en:{
+      title:'Pace Calculator',sub:'Real-time · Offline',
+      section1:'Pace Converter',section2:'Target Pace Reverse Calc',
+      paceLabel:'Pace per kilometer',minLabel:'Minutes',secLabel:'Seconds',
+      per100:'Per 100 meters',per400:'Per 400 meters (1 lap)',
+      secL:'Seconds',secU:'sec',msL:'Min : Sec',msU:'min : sec',
+      distLabel:'Target distance',meter:'m',hint:'Default 400 m — change to any distance',
+      unitLabel:'Input unit:',btnSec:'Seconds',btnMin:'Minutes',
+      secSfx:'sec',minSfx:'min',resultLabel:'Result per 100 meters',
+      mSecL:'Seconds',mSecU:'sec',mMinL:'Minutes',mMinU:'min',
+      footer:'Pace Calculator · Real-time · Offline',
+      tSL:function(d){return 'Target time for '+d+' m (sec)';},
+      tML:function(d){return 'Target time for '+d+' m (min)';},
+      toMS:function(s){var m=Math.floor(s/60);var ss=(s%60).toFixed(1);return m+'m '+ss+'s';}
+    }
+  };
+
+  function applyStyles(section,isActive){
+    var a=isActive;
+    var iC=a?'input-active':'input-inactive';
+    var cC=a?'card-active':'card-inactive';
+    var slC=a?'sub-label-active':'sub-label-inactive';
+    var clC=a?'card-label-active':'card-label-inactive';
+    var cvC=a?'card-value-active':'card-value-inactive';
+    var csC=a?'card-sub-active':'card-sub-inactive';
+    var stC=a?'section-title-active':'section-title-inactive';
+    var llC=a?'label-active':'label-inactive';
+    var tlC=a?'toggle-label-active':'toggle-label-inactive';
+    var duC=a?'dist-unit-active':'dist-unit-inactive';
+    var hC=a?'hint-active':'hint-inactive';
+    var colonC=a?'colon-active':'colon-inactive';
+    if(section==='km'){
+      document.getElementById('txt-section1').className=stC;
+      document.getElementById('colon-km').className=colonC;
+      ['txt-pace-label','txt-per100-label','txt-per400-label'].forEach(function(id){document.getElementById(id).className=slC;});
+      document.getElementById('txt-min-label').className=llC;
+      document.getElementById('txt-sec-label').className=llC;
+      document.getElementById('km-min').className=iC;
+      document.getElementById('km-sec').className=iC;
+      ['c-r100s','c-r100m','c-r400s','c-r400m'].forEach(function(id){document.getElementById(id).className=cC;});
+      ['txt-sec-l1','txt-ms-l1','txt-sec-l2','txt-ms-l2'].forEach(function(id){document.getElementById(id).className=clC;});
+      ['r100s','r100m','r400s','r400m'].forEach(function(id){document.getElementById(id).className=cvC;});
+      ['txt-sec-u1','txt-ms-u1','txt-sec-u2','txt-ms-u2'].forEach(function(id){document.getElementById(id).className=csC;});
+    } else {
+      document.getElementById('txt-section2').className=stC;
+      ['txt-dist-label','txt-result-label','label-sec-input','label-min-input'].forEach(function(id){document.getElementById(id).className=slC;});
+      document.getElementById('target-dist').className=iC;
+      document.getElementById('txt-meter').className=duC;
+      document.getElementById('txt-hint').className=hC;
+      document.getElementById('txt-unit-label').className=tlC;
+      document.getElementById('t-sec').className=iC;
+      document.getElementById('t-min-val').className=iC;
+      ['txt-sec-sfx','txt-min-sfx'].forEach(function(id){document.getElementById(id).className=duC;});
+      ['c-t100v','c-t100a'].forEach(function(id){document.getElementById(id).className=cC;});
+      ['t-label-1','txt-ms-l3'].forEach(function(id){document.getElementById(id).className=clC;});
+      ['t100-val','t100-alt'].forEach(function(id){document.getElementById(id).className=cvC;});
+      ['t-unit-1','txt-ms-u3'].forEach(function(id){document.getElementById(id).className=csC;});
+      var bS=document.getElementById('btn-sec'), bM=document.getElementById('btn-min');
+      if(a){bS.className='toggle-btn-active'+(mode==='sec'?' on':'');bM.className='toggle-btn-active'+(mode==='min'?' on':'');}
+      else{bS.className='toggle-btn-inactive';bM.className='toggle-btn-inactive';}
+    }
+  }
+
+  function switchActive(section){
+    activeSection=section;
+    var kmCard=document.getElementById('card-km'), tCard=document.getElementById('card-target');
+    if(section==='km'){
+      kmCard.className='section-card active'; kmCard.onclick=null;
+      tCard.className='section-card inactive'; tCard.onclick=function(){switchActive('target');};
+      applyStyles('km',true); applyStyles('target',false);
+    } else {
+      tCard.className='section-card active'; tCard.onclick=null;
+      kmCard.className='section-card inactive'; kmCard.onclick=function(){switchActive('km');};
+      applyStyles('km',false); applyStyles('target',true);
+    }
+  }
+
+  function setMode(m){
+    var secEl=document.getElementById('t-sec'), minEl=document.getElementById('t-min-val');
+    if(m==='min'&&mode==='sec'){var cs=parseFloat(secEl.value)||0;minEl.value=cs>0?(cs/60).toFixed(4):'';}
+    else if(m==='sec'&&mode==='min'){var cm=parseFloat(minEl.value)||0;secEl.value=cm>0?(cm*60).toFixed(1):'';}
+    mode=m;
+    document.getElementById('input-sec-area').style.display=m==='sec'?'':'none';
+    document.getElementById('input-min-area').style.display=m==='min'?'':'none';
+    if(activeSection==='target'){
+      document.getElementById('btn-sec').className='toggle-btn-active'+(m==='sec'?' on':'');
+      document.getElementById('btn-min').className='toggle-btn-active'+(m==='min'?' on':'');
+    }
+    var t=i18n[lang];
+    document.getElementById('t-label-1').textContent=m==='sec'?t.mSecL:t.mMinL;
+    document.getElementById('t-unit-1').textContent=m==='sec'?t.mSecU:t.mMinU;
+    calcTarget();
+  }
+
+  function toMS(s){return i18n[lang].toMS(s);}
+
+  function updateLabels(){
+    var d=parseFloat(document.getElementById('target-dist').value)||400;
+    var t=i18n[lang];
+    document.getElementById('label-sec-input').textContent=t.tSL(d);
+    document.getElementById('label-min-input').textContent=t.tML(d);
+  }
+
+  function setLang(l){
+    lang=l;
+    document.getElementById('lang-zh').classList.toggle('active',l==='zh');
+    document.getElementById('lang-en').classList.toggle('active',l==='en');
+    var t=i18n[l];
+    var map={'txt-title':t.title,'txt-sub':t.sub,'txt-section1':t.section1,'txt-section2':t.section2,
+      'txt-pace-label':t.paceLabel,'txt-min-label':t.minLabel,'txt-sec-label':t.secLabel,
+      'txt-per100-label':t.per100,'txt-per400-label':t.per400,
+      'txt-sec-l1':t.secL,'txt-sec-u1':t.secU,'txt-ms-l1':t.msL,'txt-ms-u1':t.msU,
+      'txt-sec-l2':t.secL,'txt-sec-u2':t.secU,'txt-ms-l2':t.msL,'txt-ms-u2':t.msU,
+      'txt-dist-label':t.distLabel,'txt-meter':t.meter,'txt-hint':t.hint,
+      'txt-unit-label':t.unitLabel,'txt-btn-sec':t.btnSec,'txt-btn-min':t.btnMin,
+      'txt-sec-sfx':t.secSfx,'txt-min-sfx':t.minSfx,'txt-result-label':t.resultLabel,
+      'txt-ms-l3':t.msL,'txt-ms-u3':t.msU,'txt-footer':t.footer};
+    Object.keys(map).forEach(function(id){document.getElementById(id).textContent=map[id];});
+    document.getElementById('t-label-1').textContent=mode==='sec'?t.mSecL:t.mMinL;
+    document.getElementById('t-unit-1').textContent=mode==='sec'?t.mSecU:t.mMinU;
+    updateLabels(); calcKm(); calcTarget();
+  }
+
+  function calcKm(){
+    var m=parseInt(document.getElementById('km-min').value)||0;
+    var s=parseInt(document.getElementById('km-sec').value)||0;
+    var total=m*60+s;
+    if(total<=0){['r100s','r100m','r400s','r400m'].forEach(function(id){document.getElementById(id).textContent='—';});return;}
+    var p100=total/10, p400=total*0.4;
+    document.getElementById('r100s').textContent=p100.toFixed(1);
+    document.getElementById('r100m').textContent=toMS(p100);
+    document.getElementById('r400s').textContent=p400.toFixed(1);
+    document.getElementById('r400m').textContent=toMS(p400);
+  }
+
+  function calcTarget(){
+    var dist=parseFloat(document.getElementById('target-dist').value)||0;
+    var totalSec=mode==='sec'?(parseFloat(document.getElementById('t-sec').value)||0):((parseFloat(document.getElementById('t-min-val').value)||0)*60);
+    if(totalSec<=0||dist<=0){document.getElementById('t100-val').textContent='—';document.getElementById('t100-alt').textContent='—';return;}
+    var p100=totalSec/(dist/100);
+    document.getElementById('t100-val').textContent=mode==='sec'?p100.toFixed(1):(p100/60).toFixed(4);
+    document.getElementById('t100-alt').textContent=toMS(p100);
+  }
+
+  ['km-min','km-sec'].forEach(function(id){document.getElementById(id).addEventListener('input',calcKm);});
+  document.getElementById('t-sec').addEventListener('input',calcTarget);
+  document.getElementById('t-min-val').addEventListener('input',calcTarget);
+  document.getElementById('target-dist').addEventListener('input',function(){updateLabels();calcTarget();});
+  calcKm(); calcTarget(); updateLabels();
+</script>
+</body>
+</html>
